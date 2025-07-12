@@ -378,10 +378,23 @@
         let reportId = null;
         
         // Function to extract RX number from barcode (to be implemented)
-        function extractRxFromBarcode(barcode) {
-            // TODO: Implement the actual extraction logic
-            // For now, return the barcode as-is
-            return barcode;
+        function extractRxFromBarcode(text) {
+            const startIndex = text.indexOf('RX');
+          if (startIndex === -1) {
+            return ""; // "RX" not found
+          }
+        
+          const searchAfterRX = text.substring(startIndex + 2); // Start searching for '-' after "RX"
+          const endIndex = searchAfterRX.indexOf('-');
+        
+          if (endIndex === -1) {
+            return ""; // '-' not found after "RX"
+          }
+        
+          // Calculate the actual end index in the original string
+          const actualEndIndex = startIndex + 2 + endIndex;
+        
+          return text.substring(startIndex + 2, actualEndIndex);
         }
         
         // Clean CSV data from UTF-16 encoding artifacts
