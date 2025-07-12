@@ -80,7 +80,7 @@
         }
         
         .table-container {
-            flex: 3;
+            flex: 4;
             overflow-x: auto;
             max-height: 600px;
             overflow-y: auto;
@@ -89,7 +89,7 @@
         }
         
         .action-log-container {
-            flex: 2;
+            flex: 3;
             max-height: 600px;
             overflow-y: auto;
             border: 1px solid #ddd;
@@ -379,7 +379,7 @@
         
         // Function to extract RX number from barcode (to be implemented)
         function extractRxFromBarcode(text) {
-            const startIndex = text.indexOf('RX');
+            const startIndex = text.toUpperCase().indexOf('RX');
           if (startIndex === -1) {
             return ""; // "RX" not found
           }
@@ -591,9 +591,9 @@
                 else scanned = "Scanned";
                 console.log(scanned);
                 row.innerHTML = `
-                    <td>${log.name}</td>
+                    <td>${log.name.substring(0,22)}</td>
                     <td>${log.rxNumber}</td>
-                    <td>${log.drug}...</td>
+                    <td>${log.drug.substring(0,25)}...</td>
                     <td>${log.action}</td>
                     <td><button class="status-button" onclick="toggleFromLog(${log.prescriptionId})">${scanned}</button></td>
                 `;
@@ -628,20 +628,20 @@
                     return;
                 }
                 
-                if (value === 'debugitems') {
+                if (value.toLowerCase() === 'debugitems') {
                     this.value = '';
                     document.getElementById('debugModal').style.display = 'block';
                     return;
                 }
                 
-                if (value === 'multiples') {
+                if (value.toLowerCase() === 'multiples') {
                     scanMode = 'multiples';
                     this.value = '';
                     alert('Multiple scan mode activated');
                     return;
                 }
                 
-                if (value === 'single') {
+                if (value.toLowerCase() === 'single') {
                     scanMode = 'single';
                     this.value = '';
                     alert('Single scan mode activated');
@@ -665,7 +665,7 @@
         
         function processScan(scanValue) {
             const rxNumber = extractRxFromBarcode(scanValue);
-            const prescription = prescriptions.find(p => p.rxNumber == (rxNumber));
+            const prescription = prescriptions.find(p => p.rxNumber.split('-')[0] == (rxNumber));
             
             if (prescription) {
                 if (scanMode === 'multiples') {
