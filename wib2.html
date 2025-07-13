@@ -540,7 +540,7 @@
             if (!prescription) return;
             
             prescription.scanned = !prescription.scanned;
-            // addToActionLog(prescription, prescription.scanned ? 'Scanned' : 'Unscanned');
+            addToActionLog(prescription, prescription.scanned ? 'Scanned' : 'Unscanned');
             sortAndDisplay();
             updateStats();
             saveProgress();
