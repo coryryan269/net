@@ -704,7 +704,8 @@
                 updateStats();
                 saveProgress();
             } else {
-                playSound('notFoundSound');
+                if (rxNumber != "")
+                    playSound('notFoundSound');
                 // alert(`RX Number ${rxNumber} not found in report`);
             }
             document.getElementById("scanInput").value = "";
