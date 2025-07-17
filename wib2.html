@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WIB REPORT</title>
+    <title>WIB REPORT 2</title>
     <link rel="icon" type="image/x-icon" href="pharmIcon.png">
     <style>
         * {
@@ -663,9 +663,9 @@
                 // Process scan
                 processScan(value);
                 this.value = '';
-                
+                document.getElementById("scanInput").value = "";
             }
-            document.getElementById("scanInput").value = "";
+            
         });
         
         function processScan(scanValue) {
