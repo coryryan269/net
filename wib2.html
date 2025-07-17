@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WIB REPORT 3</title>
+    <title>WIB REPORT 2</title>
     <link rel="icon" type="image/x-icon" href="pharmIcon.png">
     <style>
         * {
@@ -738,6 +738,10 @@
                 updateStats();
                 saveProgress();
                 document.getElementById('partialRxInput').value = "";
+                document.getElementById('partialRxModal').style.display = 'block';
+                document.getElementById('partialRxInput').value = '';
+                document.getElementById('partialRxResults').innerHTML = '';
+                document.getElementById('partialRxInput').focus();
                 // closeModal('partialRxModal');
                 playSound('scanSound');
             } else {
