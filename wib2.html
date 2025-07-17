@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WIB REPORT 2</title>
+    <title>WIB REPORT</title>
     <link rel="icon" type="image/x-icon" href="pharmIcon.png">
     <style>
         * {
@@ -671,6 +671,7 @@
         function processScan(scanValue) {
             console.log("Scan Value: " + scanValue);
             const rxNumber = extractRxFromBarcode(scanValue);
+            console.log("RX: " + rxNumber);
             const prescription = prescriptions.find(p => p.rxNumber.split('-')[0] == (rxNumber));
             
             if (prescription) {
