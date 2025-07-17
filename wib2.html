@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WIB REPORT</title>
+    <title>WIB REPORT 2</title>
     <link rel="icon" type="image/x-icon" href="pharmIcon.png">
     <style>
         * {
@@ -624,7 +624,7 @@
                 const value = this.value.trim();
                 
                 // Don't process empty input
-                if (!value) {
+                if (!value || value == '\\') {
                     return;
                 }
                 
