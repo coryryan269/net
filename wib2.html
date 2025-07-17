@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WIB REPORT 2</title>
+    <title>WIB REPORT</title>
     <link rel="icon" type="image/x-icon" href="pharmIcon.png">
     <style>
         * {
@@ -882,7 +882,11 @@
             const saved = localStorage.getItem(`pharmacy_audit_${reportId}`);
             if (saved) {
                 const data = JSON.parse(saved);
-                const indexes = data.scannedIndexes.split(',').map(Number);
+                let indexes;
+                if (data.scannedIndexes == "")
+                    indexes = [];
+                else
+                    indexes = data.scannedIndexes.split(',').map(Number);
                 
                 indexes.forEach(index => {
                     const prescription = prescriptions.find(p => p.id === index);
@@ -984,7 +988,7 @@
         
         // Add Papa Parse library
         const script = document.createElement('script');
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js';
+        script.src = 'papaparse.min.js';
         document.head.appendChild(script);
     </script>
 </body>
