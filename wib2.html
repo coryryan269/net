@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WIB REPORT 2</title>
+    <title>WIB REPORT 3</title>
     <link rel="icon" type="image/x-icon" href="pharmIcon.png">
     <style>
         * {
@@ -729,6 +729,7 @@
             const resultsDiv = document.getElementById('partialRxResults');
             if (matches.length === 0) {
                 resultsDiv.innerHTML = '<p>No matches found</p>';
+                document.getElementById('partialRxInput').value = "";
             } else if (matches.length === 1) {
                 // Auto-scan if unique match
                 matches[0].scanned = true;
@@ -736,7 +737,8 @@
                 sortAndDisplay();
                 updateStats();
                 saveProgress();
-                closeModal('partialRxModal');
+                document.getElementById('partialRxInput').value = "";
+                // closeModal('partialRxModal');
                 playSound('scanSound');
             } else {
                 resultsDiv.innerHTML = '<p>Multiple matches found:</p>';
