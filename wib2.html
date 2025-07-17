@@ -620,7 +620,7 @@
         
         // Scan input handling
         document.getElementById('scanInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
+            if (e.key === 'Enter' || e.key === '\\') {
                 const value = this.value.trim();
                 
                 // Don't process empty input
