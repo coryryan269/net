@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WIB REPORT 2</title>
+    <title>WIB REPORT</title>
     <link rel="icon" type="image/x-icon" href="pharmIcon.png">
     <style>
         * {
@@ -619,7 +619,7 @@
         }
         
         // Scan input handling
-        document.getElementById('scanInput').addEventListener('keypress', function(e) {
+        document.getElementById('scanInput').addEventListener('keyup', function(e) {
 
             document.getElementById(e.key);
             if (e.key === 'Enter' || e.key === '\\') {
@@ -627,7 +627,7 @@
                 
                 // Don't process empty input
                 if (!value || value == '\\') {
-                    document.getElementById("scanInput").value = "";
+                    // document.getElementById("scanInput").value = "";
                     return;
                 }
                 
@@ -665,6 +665,7 @@
                 this.value = '';
                 
             }
+            document.getElementById("scanInput").value = "";
         });
         
         function processScan(scanValue) {
