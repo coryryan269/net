@@ -737,7 +737,7 @@
                 sortAndDisplay();
                 updateStats();
                 saveProgress();
-                document.getElementById('partialRxInput').value = "";
+                
                 document.getElementById('partialRxModal').style.display = 'block';
                 document.getElementById('partialRxInput').value = '';
                 document.getElementById('partialRxResults').innerHTML = '';
@@ -785,7 +785,7 @@
         document.getElementById('partialRxInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 const partial = this.value.trim();
-                if (!partial) return;
+                if (!partial){document.getElementById('partialRxInput').value = ''; return;}
                 
                 const matches = prescriptions.filter(p => 
                     p.rxNumber.includes(partial)
@@ -798,6 +798,7 @@
                     sortAndDisplay();
                     updateStats();
                     saveProgress();
+                    document.getElementById('partialRxInput').value = '';
                     // closeModal('partialRxModal');
                     playSound('scanSound');
                 }
