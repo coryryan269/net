@@ -656,7 +656,7 @@
                     document.getElementById('partialRxInput').focus();
                     return;
                 }
-                
+                document.getElementById("scanInput").value = "";
                 // Process scan
                 processScan(value);
                 this.value = '';
