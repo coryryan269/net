@@ -682,7 +682,7 @@
                         if (p.patientName === patientName && 
                             !p.scanned && 
                             !p.isControl && 
-                            p.daysReady < 7) {
+                            p.daysReady < 8) {
                             p.scanned = true;
                             addToActionLog(p, 'Scanned');
                         }
