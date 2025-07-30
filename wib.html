@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WIB REPORT UPDATED</title>
+    <title>WIB REPORT</title>
     <link rel="icon" type="image/x-icon" href="pharmIcon.png">
     <style>
         * {
@@ -384,8 +384,9 @@
     <audio id="scanSound" src="src/scanned.wav"></audio>
     <audio id="notFoundSound" src="src/notFound.wav"></audio>
     
-    <!-- Add SheetJS library -->
-    <script src="/xlsx.js"></script>
+    <!-- Add SheetJS library with password support -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     
     <script>
         let prescriptions = [];
@@ -436,18 +437,53 @@
                 reader.onload = function(e) {
                     try {
                         const data = new Uint8Array(e.target.result);
-                        const options = password ? { password: password } : {};
-                        const workbook = XLSX.read(data, options);
+                        let workbook;
+                        
+                        try {
+                            // First try without password
+                            workbook = XLSX.read(data, { type: 'array' });
+                        } catch (error) {
+                            if (password) {
+                                // Try with password - different options for different Excel versions
+                                try {
+                                    workbook = XLSX.read(data, { 
+                                        type: 'array', 
+                                        password: password,
+                                        WTF: 1
+                                    });
+                                } catch (e2) {
+                                    // Some Excel files need different handling
+                                    try {
+                                        workbook = XLSX.read(data, { 
+                                            type: 'array', 
+                                            password: password,
+                                            cellStyles: true,
+                                            bookVBA: true
+                                        });
+                                    } catch (e3) {
+                                        throw new Error('Password incorrect or file format not supported');
+                                    }
+                                }
+                            } else {
+                                // No password provided, but file needs one
+                                reject({ needsPassword: true });
+                                return;
+                            }
+                        }
                         
                         // Get the first sheet
                         const firstSheetName = workbook.SheetNames[0];
                         const worksheet = workbook.Sheets[firstSheetName];
                         
                         // Convert to JSON
-                        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet, {
+                            defval: '', // Default value for empty cells
+                            raw: false  // Format dates and numbers as strings
+                        });
+                        
                         resolve(jsonData);
                     } catch (error) {
-                        if (error.message && error.message.includes('password')) {
+                        if (error.message && (error.message.includes('encrypted') || error.message.includes('password'))) {
                             reject({ needsPassword: true });
                         } else {
                             reject(error);
@@ -644,8 +680,10 @@
                     document.getElementById('excelPassword').value = '';
                     document.getElementById('excelPassword').focus();
                 } else {
-                    alert('Error reading Excel file: ' + error.message);
+                    alert('Error reading Excel file. The file may be using an older Excel format or encryption method that is not supported. Please try saving the file in a newer Excel format (.xlsx) or export it as CSV.');
                     closeModal('passwordModal');
+                    pendingFile = null;
+                    pendingFileType = null;
                 }
             }
         }
