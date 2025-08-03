@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WIB REPORT</title>
+    <link rel="icon" type="image/x-icon" href="pharmIcon.png">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: monospace, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+            padding: 10px;
+        }
+        
+        .container {
+            width: 100%;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 15px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 24px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .controls label {
+            font-weight: 500;
+            color: #666;
+        }
+        
+        .controls input[type="file"] {
+            padding: 5px;
+        }
+        
+        .controls button {
+            padding: 8px 16px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .controls button:hover {
+            background: #0056b3;
+        }
+        
+        .scan-input {
+            flex: 1;
+            min-width: 300px;
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #007bff;
+            border-radius: 4px;
+        }
+        
+        .main-content {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .table-container {
+            flex: 4;
+            overflow-x: auto;
+            max-height: 600px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .action-log-container {
+            flex: 3;
+            max-height: 600px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            background: #f8f9fa;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            padding: 8px;
+            text-align: left;
+            border-bottom: 2px solid #dee2e6;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        td {
+            padding: 8px;
+            border: 1px solid #dee2e6;
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 250px;
+        }
+        
+        tr.unscanned {
+            background-color: lightcoral;
+        }
+        
+        tr.scanned {
+            background-color: white;
+        }
+        
+        tr.control {
+            font-weight: bold;
+        }
+        
+        tr:hover {
+            opacity: 0.8;
+            cursor: pointer;
+        }
+        
+        .status-button {
+            padding: 4px 8px;
+            border: 1px solid #007bff;
+            background: white;
+            color: #007bff;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .status-button:hover {
+            background: #007bff;
+            color: white;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 400px;
+            border-radius: 8px;
+        }
+        
+        .modal-header {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .modal input {
+            width: 100%;
+            padding: 8px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 15px;
+        }
+        
+        .stats {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        @media print {
+            .controls,
+            .action-log-container,
+            .stats,
+            h1,
+            button {
+                display: none !important;
+            }
+            
+            .main-content {
+                display: block;
+            }
+            
+            .table-container {
+                border: none;
+                max-height: none;
+                overflow: visible;
+            }
+            
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .container {
+                box-shadow: none;
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>BIN AUDIT</h1>
+        
+        <div class="controls">
+            <label>
+                WIB Report:
+                <input type="file" id="wibReport" accept=".csv">
+            </label>
+            <label>
+                Name Replacer (Optional):
+                <input type="file" id="nameReplacer" accept=".csv">
+            </label>
+            <button onclick="processReports()">Process Reports</button>
+            <button onclick="window.print()">Print/Save PDF</button>
+            <button onclick="exportScanned()">Export Scanned</button>
+            <button onclick="showImportDialog()">Import Scanned</button>
+<!--             <button onclick="clearData()">Clear All</button> -->
+        </div>
+        
+        <div class="controls">
+            <input type="text" id="scanInput" class="scan-input" placeholder="Scan or type RX number..." autofocus>
+        </div>
+        
+        <div class="stats" id="stats" style="display: none;">
+            <div class="stat-item">
+                <div class="stat-value" id="totalCount">0</div>
+                <div class="stat-label">Total Scripts</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="scannedCount">0</div>
+                <div class="stat-label">Scanned</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="unscannedCount">0</div>
+                <div class="stat-label">Unscanned</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="controlCount">0</div>
+                <div class="stat-label">Controls</div>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="table-container">
+                <table id="mainTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 25%;">Patient Name</th>
+                            <th style="width: 15%;">RX Number</th>
+                            <th style="width: 40%;">Drug</th>
+                            <th style="width: 10%;">Days</th>
+                            <th style="width: 10%;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="action-log-container">
+                <h3 style="font-size: 16px; margin-bottom: 10px;">Action Log (Last 100)</h3>
+                <table id="actionLog">
+                    <thead>
+                        <tr>
+                            <th style="width: 20%;">Name</th>
+                            <th style="width: 20%;">RX#</th>
+                            <th style="width: 25%;">Drug</th>
+                            <th style="width: 15%;">Action</th>
+                            <th style="width: 20%;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="actionLogBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modals -->
+    <div id="partialRxModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Enter Partial RX Number</div>
+            <input type="text" id="partialRxInput" placeholder="Enter partial RX number..." autocomplete="off">
+            <div id="partialRxResults" style="margin: 10px 0; max-height: 200px; overflow-y: auto;"></div>
+            <div class="modal-buttons">
+                <button onclick="closeModal('partialRxModal')">CLOSE</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="debugModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Debug: Auto-scan by Name Range</div>
+            <input type="text" id="debugStart" placeholder="Start letters (e.g., 'Jo')" maxlength="2">
+            <input type="text" id="debugEnd" placeholder="End letters (e.g., 'Sm')" maxlength="2">
+            <div class="modal-buttons">
+                <button onclick="executeDebugScan()">Execute</button>
+                <button onclick="closeModal('debugModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="importModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Import Scanned Items</div>
+            <textarea id="importData" rows="10" style="width: 100%;" placeholder="Paste exported data here..."></textarea>
+            <div class="modal-buttons">
+                <button onclick="importScannedData()">Import</button>
+                <button onclick="closeModal('importModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Audio files (you'll need to add these) -->
+    <audio id="beep" preload="auto">
+      <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEA..." type="audio/wav">
+      Your browser does not support the audio element.
+    </audio>
+    <audio id="scanSound" src="src/scanned.wav" type="audio/wav" preload="auto"></audio>
+    <audio id="notFoundSound" src="src/notFound.wav" type="audio/wav" preload="auto"></audio>
+    
+    <script>
+        let prescriptions = [];
+        let actionLog = [];
+        let scanMode = 'single'; // 'single' or 'multiples'
+        let reportId = null;
+        
+        // Function to extract RX number from barcode (to be implemented)
+        function extractRxFromBarcode(text) {
+            const startIndex = text.toUpperCase().indexOf('RX');
+          if (startIndex === -1) {
+            return ""; // "RX" not found
+          }
+        
+          const searchAfterRX = text.substring(startIndex + 2); // Start searching for '-' after "RX"
+          const endIndex = searchAfterRX.indexOf('-');
+        
+          if (endIndex === -1) {
+            return ""; // '-' not found after "RX"
+          }
+        
+          // Calculate the actual end index in the original string
+          const actualEndIndex = startIndex + 2 + endIndex;
+        
+          return text.substring(startIndex + 2, actualEndIndex);
+        }
+        
+        // Clean CSV data from UTF-16 encoding artifacts
+        function cleanCSV(csvText) {
+            return csvText
+                .replace(/\+ACI-/g, '')
+                .replace(/-ACI-/g, '')
+                .replace(/\+AC0-/g, '-')
+                .replace(/\+ACY-/g, '&')
+                .replace(/\+ACM-/g, '#')
+                .replace(/\+ACoAKgAqACoAKgAqACoAKg-/g, '********')
+                .replace(/\+ACA-/g, ' ')
+                .replace(/\+AD0-/g, '=')
+                .replace(/\r\n/g, '\n');
+        }
+        
+        // Process uploaded reports
+        async function processReports() {
+            const wibFile = document.getElementById('wibReport').files[0];
+            const nameFile = document.getElementById('nameReplacer').files[0];
+            
+            if (!wibFile) {
+                alert('Please upload the WIB report');
+                return;
+            }
+            
+            try {
+                const wibText = cleanCSV(await wibFile.text());
+                const wibData = Papa.parse(wibText, { header: true, dynamicTyping: true, skipEmptyLines: true }).data;
+                
+                // Process prescriptions
+                prescriptions = wibData.map((row, index) => ({
+                    id: index,
+                    patientName: row['Patient Name'],
+                    rxNumber: row['Rx Number'],
+                    drug: row['Item'],
+                    daysReady: row['Days at Ready to Dispense'],
+                    isControl: isControlRx(row['Rx Number']),
+                    scanned: false,
+                    originalName: row['Patient Name']
+                }));
+                
+                // Check for duplicates
+                const rxNumbers = prescriptions.map(p => p.rxNumber);
+                const duplicates = rxNumbers.filter((rx, index) => rxNumbers.indexOf(rx) !== index);
+                if (duplicates.length > 0) {
+                    alert(`Warning: Removed ${duplicates.length} duplicate RX numbers`);
+                    prescriptions = prescriptions.filter((p, index) => 
+                        rxNumbers.indexOf(p.rxNumber) === index
+                    );
+                }
+                
+                // Process name replacer if provided
+                if (nameFile) {
+                    const nameText = cleanCSV(await nameFile.text());
+                    const nameData = Papa.parse(nameText, { header: true, skipEmptyLines: true }).data;
+                    
+                    let replacedCount = 0;
+                    let notFoundCount = 0;
+                    
+                    prescriptions.forEach(p => {
+                        if (p.patientName.includes('*')) {
+                            const nameRow = nameData.find(n => n['Rx Number'] === p.rxNumber);
+                            if (nameRow && nameRow['Patient Name']) {
+                                // Handle the parsed_extra field
+                                let fullName = nameRow['Patient Name'];
+                                if (nameRow.__parsed_extra && nameRow.__parsed_extra[0]) {
+                                    fullName += nameRow.__parsed_extra[0];
+                                }
+                                p.patientName = fullName;
+                                replacedCount++;
+                            } else {
+                                notFoundCount++;
+                            }
+                        }
+                    });
+                    
+                    if (notFoundCount > 0) {
+                        alert(`Warning: Could not find names for ${notFoundCount} asterisked prescriptions`);
+                    }
+                }
+                
+                // Calculate report ID
+                reportId = prescriptions.reduce((sum, p) => {
+                    const rxNum = parseInt(p.rxNumber.split('-')[0]) || 0;
+                    return sum + rxNum;
+                }, 0);
+                
+                // Check for saved progress
+                loadProgress();
+                
+                // Sort and display
+                sortAndDisplay();
+                document.getElementById('stats').style.display = 'flex';
+                updateStats();
+                
+            } catch (error) {
+                console.error('Error processing reports:', error);
+                alert('Error processing reports. Please check the file format.');
+            }
+        }
+        
+        function isControlRx(rxNumber) {
+            const rxNum = rxNumber.split('-')[0];
+            return rxNum.startsWith('2') || rxNum.startsWith('4');
+        }
+        
+        function sortAndDisplay() {
+            // Sort: unscanned first, then scanned; within each group: controls first, then alphabetical
+            prescriptions.sort((a, b) => {
+                if (a.scanned !== b.scanned) return a.scanned ? 1 : -1;
+                if (a.isControl !== b.isControl) return b.isControl ? 1 : -1;
+                return a.patientName.localeCompare(b.patientName);
+            });
+            
+            displayTable();
+        }
+        
+        function displayTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            prescriptions.forEach(p => {
+                const row = document.createElement('tr');
+                row.className = p.scanned ? 'scanned' : 'unscanned';
+                if (p.isControl) row.classList.add('control');
+                
+                row.innerHTML = `
+                    <td>${p.patientName}</td>
+                    <td>${p.rxNumber}</td>
+                    <td>${p.drug}</td>
+                    <td>${p.daysReady}</td>
+                    <td>${p.scanned ? 'Scanned' : 'Not Scanned'}</td>
+                `;
+                
+                row.onclick = () => toggleScanned(p.id);
+                tbody.appendChild(row);
+            });
+        }
+        
+        function toggleScanned(id) {
+            const prescription = prescriptions.find(p => p.id === id);
+            if (!prescription) return;
+            
+            prescription.scanned = !prescription.scanned;
+            addToActionLog(prescription, prescription.scanned ? 'Scanned' : 'Unscanned');
+            sortAndDisplay();
+            updateStats();
+            saveProgress();
+            displayActionLog();
+        }
+        
+        function addToActionLog(prescription, action) {
+            actionLog.unshift({
+                name: prescription.patientName,
+                rxNumber: prescription.rxNumber,
+                drug: prescription.drug,
+                action: action,
+                currentStatus: prescription.scanned,
+                prescriptionId: prescription.id
+            });
+            
+            // Keep only last 100 actions
+            if (actionLog.length > 100) {
+                actionLog = actionLog.slice(0, 100);
+            }
+            
+            displayActionLog();
+        }
+        
+
+        function findRx(rxNumber) {
+            const prescription = prescriptions.find(p => p.rxNumber.includes(rxNumber));
+            if (prescription) {
+                console.log('Found:', prescription);
+                console.log('Status:', prescription.scanned ? 'SCANNED' : 'NOT SCANNED');
+                return prescription;
+            } else {
+                console.log('RX not found');
+                return null;
+            }
+        }
+
+        function displayActionLog() {
+            console.log("displayActionLog");
+            const tbody = document.getElementById('actionLogBody');
+            tbody.innerHTML = '';
+            actionLog.forEach(log => {
+                const row = document.createElement('tr');
+                console.log(findRx(log.rxNumber));
+                let scanned = findRx(log.rxNumber).scanned;
+                console.log("initially: " + scanned);
+                if (scanned == false) scanned = "Not Scanned";
+                else scanned = "Scanned";
+                console.log(scanned);
+                row.innerHTML = `
+                    <td>${log.name.substring(0,22)}</td>
+                    <td>${log.rxNumber}</td>
+                    <td>${log.drug.substring(0,25)}...</td>
+                    <td>${log.action}</td>
+                    <td><button class="status-button" onclick="toggleFromLog(${log.prescriptionId})">${scanned}</button></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        function toggleFromLog(id) {
+            toggleScanned(id);
+            
+        }
+        
+        function updateStats() {
+            const total = prescriptions.length;
+            const scanned = prescriptions.filter(p => p.scanned).length;
+            const unscanned = total - scanned;
+            const controls = prescriptions.filter(p => p.isControl).length;
+            
+            document.getElementById('totalCount').textContent = total;
+            document.getElementById('scannedCount').textContent = scanned;
+            document.getElementById('unscannedCount').textContent = unscanned;
+            document.getElementById('controlCount').textContent = controls;
+        }
+        
+        // Scan input handling
+        document.getElementById('scanInput').addEventListener('keyup', function(e) {
+
+            document.getElementById(e.key);
+            if (e.key === 'Enter' || e.key === '\\') {
+                const value = this.value.trim();
+                
+                // Don't process empty input
+                if (!value || value == '\\') {
+                    // document.getElementById("scanInput").value = "";
+                    return;
+                }
+                
+                if (value.toLowerCase() === 'debugitems') {
+                    this.value = '';
+                    document.getElementById('debugModal').style.display = 'block';
+                    return;
+                }
+                
+                if (value.toLowerCase() === 'multiples') {
+                    scanMode = 'multiples';
+                    this.value = '';
+                    alert('Multiple scan mode activated');
+                    return;
+                }
+                
+                if (value.toLowerCase() === 'single') {
+                    scanMode = 'single';
+                    this.value = '';
+                    alert('Single scan mode activated');
+                    return;
+                }
+                
+                if (value === '+') {
+                    this.value = '';
+                    document.getElementById('partialRxModal').style.display = 'block';
+                    document.getElementById('partialRxInput').value = '';
+                    document.getElementById('partialRxResults').innerHTML = '';
+                    document.getElementById('partialRxInput').focus();
+                    return;
+                }
+                
+                // Process scan
+                processScan(value);
+                this.value = '';
+                document.getElementById("scanInput").value = "";
+            }
+            
+        });
+        
+        function processScan(scanValue) {
+            console.log("Scan Value: " + scanValue);
+            const rxNumber = extractRxFromBarcode(scanValue);
+            console.log("RX: " + rxNumber);
+            const prescription = prescriptions.find(p => p.rxNumber.split('-')[0] == (rxNumber));
+            
+            if (prescription) {
+                if (scanMode === 'multiples') {
+                    // Scan all prescriptions for this patient
+                    const patientName = prescription.patientName;
+                    prescriptions.forEach(p => {
+                        if (p.patientName === patientName && 
+                            !p.scanned && 
+                            !p.isControl && 
+                            p.daysReady < 8) {
+                            p.scanned = true;
+                            addToActionLog(p, 'Scanned');
+                        }
+                    });
+                    
+                    // Also scan the original prescription
+                    if (!prescription.scanned) {
+                        prescription.scanned = true;
+                        addToActionLog(prescription, 'Scanned');
+                    }
+                } else {
+                    // Single scan mode
+                    prescription.scanned = true;
+                    addToActionLog(prescription, 'Scanned');
+                }
+                
+                playSound('scanSound');
+                sortAndDisplay();
+                updateStats();
+                saveProgress();
+            } else {
+                if (rxNumber != "")
+                    playSound('notFoundSound');
+                // alert(`RX Number ${rxNumber} not found in report`);
+            }
+            document.getElementById("scanInput").value = "";
+        }
+        
+        function playSound(soundId) {
+            const audio = document.getElementById(soundId);
+            if (audio) {
+                audio.play().catch(e => console.log('Audio play failed:', e));
+            }
+        }
+        
+        function searchPartialRx() {
+            const partial = document.getElementById('partialRxInput').value.trim();
+            if (!partial) return;
+            
+            const matches = prescriptions.filter(p => 
+                p.rxNumber.includes(partial)
+            );
+            
+            const resultsDiv = document.getElementById('partialRxResults');
+            if (matches.length === 0) {
+                resultsDiv.innerHTML = '<p>No matches found</p>';
+                document.getElementById('partialRxInput').value = "";
+            } else if (matches.length === 1) {
+                // Auto-scan if unique match
+                matches[0].scanned = true;
+                addToActionLog(matches[0], 'Entered Manually');
+                sortAndDisplay();
+                updateStats();
+                saveProgress();
+                
+                document.getElementById('partialRxModal').style.display = 'block';
+                document.getElementById('partialRxInput').value = '';
+                document.getElementById('partialRxResults').innerHTML = '';
+                document.getElementById('partialRxInput').focus();
+                // closeModal('partialRxModal');
+                playSound('scanSound');
+            } else {
+                resultsDiv.innerHTML = '<p>Multiple matches found:</p>';
+                matches.forEach(m => {
+                    resultsDiv.innerHTML += `<p>${m.rxNumber} - ${m.patientName}</p>`;
+                });
+            }
+        }
+        
+        // Add live search for partial RX modal
+        document.getElementById('partialRxInput').addEventListener('input', function() {
+            const partial = this.value.trim();
+            if (!partial) {
+                document.getElementById('partialRxResults').innerHTML = '';
+                return;
+            }
+            
+            const matches = prescriptions.filter(p => 
+                p.rxNumber.includes(partial)
+            );
+            
+            const resultsDiv = document.getElementById('partialRxResults');
+            if (matches.length === 0) {
+                resultsDiv.innerHTML = '<p style="color: #999;">No matches found</p>';
+            } else if (matches.length === 1) {
+                resultsDiv.innerHTML = `<p style="color: green; font-weight: bold;">Unique match found! Press Enter to scan:</p>
+                    <p>${matches[0].rxNumber} <BR> ${matches[0].patientName} <BR> ${matches[0].drug}</p>`;
+            } else {
+                resultsDiv.innerHTML = `<p style="color: #666;">Multiple matches (${matches.length}):</p>`;
+                matches.slice(0, 10).forEach(m => {
+                    resultsDiv.innerHTML += `<p style="font-size: 12px;">${m.rxNumber} - ${m.patientName}</p>`;
+                });
+                if (matches.length > 10) {
+                    resultsDiv.innerHTML += `<p style="color: #999; font-size: 12px;">...and ${matches.length - 10} more</p>`;
+                }
+            }
+        });
+        
+        // Handle Enter key in partial RX input
+        document.getElementById('partialRxInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const partial = this.value.trim();
+                if (!partial){document.getElementById('partialRxInput').value = ''; return;}
+                
+                const matches = prescriptions.filter(p => 
+                    p.rxNumber.includes(partial)
+                );
+                
+                if (matches.length === 1) {
+                    // Auto-scan the unique match
+                    matches[0].scanned = true;
+                    addToActionLog(matches[0], 'Scanned (Partial Match)');
+                    sortAndDisplay();
+                    updateStats();
+                    saveProgress();
+                    document.getElementById('partialRxInput').value = '';
+                    // closeModal('partialRxModal');
+                    playSound('scanSound');
+                }
+            }
+        });
+        
+        function executeDebugScan() {
+            const startLetters = document.getElementById('debugStart').value.toLowerCase();
+            const endLetters = document.getElementById('debugEnd').value.toLowerCase();
+            
+            if (!startLetters || !endLetters) {
+                alert('Please enter both start and end letters');
+                return;
+            }
+            
+            let scannedCount = 0;
+            prescriptions.forEach(p => {
+                const nameStart = p.patientName.substring(0, 2).toLowerCase();
+                if (nameStart >= startLetters && 
+                    nameStart <= endLetters && 
+                    !p.isControl && 
+                    p.daysReady <= 6 && 
+                    !p.scanned) {
+                    p.scanned = true;
+                    addToActionLog(p, 'Scanned');
+                    scannedCount++;
+                }
+            });
+            
+            alert(`Auto-scanned ${scannedCount} prescriptions`);
+            sortAndDisplay();
+            updateStats();
+            saveProgress();
+            closeModal('debugModal');
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+            document.getElementById('scanInput').focus();
+        }
+        
+        // Close modals on escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal').forEach(modal => {
+                    modal.style.display = 'none';
+                });
+                document.getElementById('scanInput').focus();
+            }
+        });
+        
+        // Click outside modal to close
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+                document.getElementById('scanInput').focus();
+            }
+        }
+        
+        // Storage functions
+        function saveProgress() {
+            if (!reportId) return;
+            
+            const scannedIndexes = prescriptions
+                .filter(p => p.scanned)
+                .map(p => p.id)
+                .join(',');
+            
+            const data = {
+                reportId: reportId,
+                scannedIndexes: scannedIndexes,
+                timestamp: new Date().toISOString()
+            };
+            
+            localStorage.setItem(`pharmacy_audit_${reportId}`, JSON.stringify(data));
+        }
+        
+        function loadProgress() {
+            if (!reportId) return;
+            
+            const saved = localStorage.getItem(`pharmacy_audit_${reportId}`);
+            if (saved) {
+                const data = JSON.parse(saved);
+                let indexes;
+                if (data.scannedIndexes == "")
+                    indexes = [];
+                else
+                    indexes = data.scannedIndexes.split(',').map(Number);
+                
+                indexes.forEach(index => {
+                    const prescription = prescriptions.find(p => p.id === index);
+                    if (prescription) {
+                        prescription.scanned = true;
+                    }
+                });
+                
+                alert('Previous progress loaded');
+            }
+        }
+        
+        function exportScanned() {
+            if (!prescriptions.length) {
+                alert('No data to export');
+                return;
+            }
+            
+            const scannedIndexes = prescriptions
+                .filter(p => p.scanned)
+                .map(p => p.id)
+                .join(',');
+            
+            const exportData = {
+                reportId: reportId,
+                scannedIndexes: scannedIndexes,
+                timestamp: new Date().toISOString()
+            };
+            
+            navigator.clipboard.writeText(JSON.stringify(exportData))
+                .then(() => alert('Scanned data copied to clipboard'))
+                .catch(() => {
+                    // Fallback
+                    const textarea = document.createElement('textarea');
+                    textarea.value = JSON.stringify(exportData);
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    alert('Scanned data copied to clipboard');
+                });
+        }
+        
+        function showImportDialog() {
+            document.getElementById('importModal').style.display = 'block';
+        }
+        
+        function importScannedData() {
+            const importText = document.getElementById('importData').value.trim();
+            if (!importText) {
+                alert('Please paste the exported data');
+                return;
+            }
+            
+            try {
+                const data = JSON.parse(importText);
+                
+                if (data.reportId !== reportId) {
+                    alert('Warning: This data is from a different report. Import anyway?');
+                }
+                
+                const indexes = data.scannedIndexes.split(',').map(Number);
+                let imported = 0;
+                
+                indexes.forEach(index => {
+                    const prescription = prescriptions.find(p => p.id === index);
+                    if (prescription && !prescription.scanned) {
+                        prescription.scanned = true;
+                        imported++;
+                    }
+                });
+                
+                alert(`Imported ${imported} scanned items`);
+                sortAndDisplay();
+                updateStats();
+                saveProgress();
+                closeModal('importModal');
+                
+            } catch (error) {
+                alert('Invalid import data');
+            }
+        }
+        
+        function clearData() {
+            if (confirm('Clear all data? This cannot be undone.')) {
+                prescriptions = [];
+                actionLog = [];
+                reportId = null;
+                document.getElementById('tableBody').innerHTML = '';
+                document.getElementById('actionLogBody').innerHTML = '';
+                document.getElementById('stats').style.display = 'none';
+                document.getElementById('wibReport').value = '';
+                document.getElementById('nameReplacer').value = '';
+            }
+        }
+        
+        // Initialize - set focus to scan input
+        document.getElementById('scanInput').focus();
+        
+        // Add Papa Parse library
+        const script = document.createElement('script');
+        script.src = 'papaparse.js';
+        document.head.appendChild(script);
+    </script>
+</body>
+</html>
+                    
