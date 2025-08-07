@@ -990,7 +990,17 @@
                 document.getElementById('nameReplacer').value = '';
             }
         }
-        
+
+        fridgeItems = ['semaglutide', 'ozempic', 'lantus', 'insulin', 'latanoprost', 'mounjaro', 'wegovy', 'tiirzepatide', 'novolog', 'novolin', 'humalog', 'humulin', 'glargine', 'lispro', 'aspart'];
+        function findUnscannedMatchingPrescriptions() {
+            return prescriptions.filter(prescription => {
+                return prescription.scanned === false && 
+                       fridgeItems.some(item => 
+                           prescription.drug && 
+                           prescription.drug.toLowerCase().includes(item.toLowerCase())
+                       );
+            });
+        }
         // Initialize - set focus to scan input
         document.getElementById('scanInput').focus();
         
@@ -1002,3 +1012,4 @@
 </body>
 </html>
                     
+
