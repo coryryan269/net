@@ -1,0 +1,287 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Night Shift Progress Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transition: background 0.5s ease;
+        }
+
+        body.off-hours {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            max-width: 600px;
+            width: 90%;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2em;
+            font-weight: 600;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .clock {
+            text-align: center;
+            font-size: 3em;
+            font-weight: 300;
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .progress-container {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 5px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 40px;
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+            border-radius: 10px;
+            transition: width 1s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 1.1em;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .progress-bar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                transform: translateX(-100%);
+            }
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: 600;
+        }
+
+        .off-hours-message {
+            text-align: center;
+            padding: 40px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .off-hours-message h2 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        .off-hours-message p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Night Shift Tracker</h1>
+        <div class="clock" id="clock"></div>
+        
+        <div id="working-content" style="display: none;">
+            <div class="progress-container">
+                <div class="progress-bar" id="progress-bar">
+                    <span id="progress-text">0%</span>
+                </div>
+            </div>
+            
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-label">Time Elapsed</div>
+                    <div class="stat-value" id="time-elapsed">0:00</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Time Remaining</div>
+                    <div class="stat-value" id="time-remaining">10:00</div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="off-hours-content" class="off-hours-message" style="display: none;">
+            <h2>Off Hours</h2>
+            <p>Your shift starts at 10:00 PM</p>
+            <p id="next-shift-time"></p>
+        </div>
+    </div>
+
+    <script>
+        function updateDisplay() {
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+            
+            // Update clock
+            const clockEl = document.getElementById('clock');
+            clockEl.textContent = now.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit' 
+            });
+            
+            // Check if within working hours (10 PM to 8 AM)
+            // 22:00 (10 PM) to 23:59 OR 00:00 to 07:59
+            const isWorkingHours = hours >= 22 || hours < 8;
+            
+            const workingContent = document.getElementById('working-content');
+            const offHoursContent = document.getElementById('off-hours-content');
+            const body = document.body;
+            
+            if (isWorkingHours) {
+                // Calculate progress
+                let minutesSinceStart;
+                
+                if (hours >= 22) {
+                    // After 10 PM same day
+                    minutesSinceStart = (hours - 22) * 60 + minutes;
+                } else {
+                    // After midnight
+                    minutesSinceStart = (hours + 2) * 60 + minutes;
+                }
+                
+                const totalMinutes = 600; // 10 hours = 600 minutes
+                const progress = Math.min((minutesSinceStart / totalMinutes) * 100, 100);
+                
+                // Update progress bar
+                const progressBar = document.getElementById('progress-bar');
+                const progressText = document.getElementById('progress-text');
+                progressBar.style.width = progress + '%';
+                progressText.textContent = progress.toFixed(1) + '%';
+                
+                // Update time elapsed
+                const hoursElapsed = Math.floor(minutesSinceStart / 60);
+                const minsElapsed = minutesSinceStart % 60;
+                document.getElementById('time-elapsed').textContent = 
+                    `${hoursElapsed}:${minsElapsed.toString().padStart(2, '0')}`;
+                
+                // Update time remaining
+                const minutesRemaining = Math.max(totalMinutes - minutesSinceStart, 0);
+                const hoursRemaining = Math.floor(minutesRemaining / 60);
+                const minsRemaining = minutesRemaining % 60;
+                document.getElementById('time-remaining').textContent = 
+                    `${hoursRemaining}:${minsRemaining.toString().padStart(2, '0')}`;
+                
+                // Show working content
+                workingContent.style.display = 'block';
+                offHoursContent.style.display = 'none';
+                body.classList.remove('off-hours');
+            } else {
+                // Calculate time until next shift
+                const nextShift = new Date();
+                if (hours >= 8) {
+                    // Same day, shift starts at 10 PM
+                    nextShift.setHours(22, 0, 0, 0);
+                } else {
+                    // Should not happen given our conditions, but just in case
+                    nextShift.setHours(22, 0, 0, 0);
+                    nextShift.setDate(nextShift.getDate() - 1);
+                }
+                
+                const timeDiff = nextShift - now;
+                const hoursUntil = Math.floor(timeDiff / (1000 * 60 * 60));
+                const minsUntil = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+                
+                document.getElementById('next-shift-time').textContent = 
+                    `Next shift in ${hoursUntil}h ${minsUntil}m`;
+                
+                // Show off-hours content
+                workingContent.style.display = 'none';
+                offHoursContent.style.display = 'block';
+                body.classList.add('off-hours');
+            }
+        }
+        
+        // Update immediately and then every second
+        updateDisplay();
+        setInterval(updateDisplay, 1000);
+    </script>
+</body>
+</html>
