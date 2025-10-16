@@ -1176,7 +1176,7 @@
 
         function performExport() {
 
-            const exportUserName = document.getElementById('exportUserName').value.trim();
+            const exportUserName = currentUser; // document.getElementById('exportUserName').value.trim();
 
             if (!exportUserName) {
 
@@ -1196,7 +1196,7 @@
                 scannedIndexes: scannedIndexes,
                 timestamp: new Date().toISOString(),
 
-                exportedBy: exportUserName,
+                exportedBy: currentUser,
 
                 auditTrail: auditTrail.filter(entry => entry.reportId === reportId)
             };
