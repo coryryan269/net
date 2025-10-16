@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WIB REPORT +++</title>
+    <title>WIB REPORT +</title>
     <link rel="icon" type="image/x-icon" href="pharmIcon.png">
     <style>
         * {
@@ -473,25 +473,25 @@
 
         // Load user from localStorage on page load
 
-        // window.onload = function() {
+        window.onload = function() {
 
-        //     const savedUser = sessionStorage.getItem('pharmacy_audit_user');
+            const savedUser = sessionStorage.getItem('pharmacy_audit_user');
 
-        //     if (savedUser) {
+            if (savedUser) {
 
-        //         currentUser = savedUser;
+                currentUser = savedUser;
 
-        //         document.getElementById('currentUserName').textContent = currentUser;
+                document.getElementById('currentUserName').textContent = currentUser;
 
-        //         document.getElementById('userInfo').style.display = 'block';
+                document.getElementById('userInfo').style.display = 'block';
 
-        //     } else {
+            } else {
 
-        //         setUser(); // Prompt for user name if not set
+                setUser(); // Prompt for user name if not set
 
-        //     }
+            }
 
-        // };
+        };
 
         
 
@@ -587,15 +587,15 @@
                 return;
             }
             
-            // if (!currentUser) {
+            if (!currentUser) {
 
-            //     alert('Please set your user name first');
+                alert('Please set your user name first');
 
-            //     setUser();
+                setUser();
 
-            //     return;
+                return;
 
-            // }
+            }
             
             try {
                 const wibText = cleanCSV(await wibFile.text());
