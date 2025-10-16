@@ -507,13 +507,13 @@
 
         function saveUserName() {
 
-            const userName = document.getElementById('userNameInput').value.trim();
+            const userName = document.getElementById('userNameInput').value.trim() + "*";
 
             if (userName) {
 
                 currentUser = userName;
 
-                sessionStorage.setItem('pharmacy_audit_user', userName + "*");
+                sessionStorage.setItem('pharmacy_audit_user', userName);
 
                 document.getElementById('currentUserName').textContent = currentUser;
 
