@@ -294,6 +294,7 @@
             <button onclick="window.print()">Print/Save PDF</button>
             <button onclick="exportScanned()">Export Scanned</button>
             <button onclick="showImportDialog()">Import Scanned</button>
+            <button onclick="exportAuditTrail()">Export Audit Trail</button>
 <!--             <button onclick="clearData()">Clear All</button> -->
         </div>
         
@@ -716,7 +717,7 @@
             
             prescription.scanned = !prescription.scanned;
             addToActionLog(prescription, prescription.scanned ? 'Scanned' : 'Unscanned');
-            // addToAuditTrail(prescription, prescription.scanned ? 'Scanned' : 'Unscanned', 'Manual');
+            addToAuditTrail(prescription, prescription.scanned ? 'Scanned' : 'Unscanned', 'Manual');
             sortAndDisplay();
             updateStats();
             saveProgress();
