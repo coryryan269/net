@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WIB REPORT ++</title>
+    <title>WIB REPORT +</title>
     <link rel="icon" type="image/x-icon" href="pharmIcon.png">
     <style>
         * {
@@ -477,18 +477,19 @@
 
             const savedUser = sessionStorage.getItem('pharmacy_audit_user');
 
+            // Normalize previously-saved values (strip any trailing '*' marker and trim).
+            // If the normalized value is empty, treat it as not set and prompt the user.
             if (savedUser) {
-
-                currentUser = savedUser;
-
-                document.getElementById('currentUserName').textContent = currentUser;
-
-                document.getElementById('userInfo').style.display = 'block';
-
+                const normalized = String(savedUser).replace(/\*+$/g, '').trim();
+                if (normalized) {
+                    currentUser = normalized;
+                    document.getElementById('currentUserName').textContent = currentUser;
+                    document.getElementById('userInfo').style.display = 'block';
+                } else {
+                    setUser(); // Prompt for user name if stored value was invalid
+                }
             } else {
-
                 setUser(); // Prompt for user name if not set
-
             }
 
         };
@@ -507,13 +508,14 @@
 
         function saveUserName() {
 
-            const userName = document.getElementById('userNameInput').value.trim() + "*";
+            // Save the entered username without any sentinel characters.
+            const userNameInput = document.getElementById('userNameInput').value.trim();
 
-            if (userName) {
+            if (userNameInput) {
 
-                currentUser = userName;
+                currentUser = userNameInput;
 
-                sessionStorage.setItem('pharmacy_audit_user', userName);
+                sessionStorage.setItem('pharmacy_audit_user', currentUser);
 
                 document.getElementById('currentUserName').textContent = currentUser;
 
@@ -587,7 +589,9 @@
                 return;
             }
             
-            if (!currentUser) {
+            // Normalize currentUser for validation (handles legacy trailing '*' values)
+            const effectiveUser = currentUser ? String(currentUser).replace(/\*+$/g, '').trim() : '';
+            if (!effectiveUser) {
 
                 alert('Please set your user name first');
 
