@@ -178,6 +178,11 @@
             border-radius: 8px;
         }
         
+        #fridgeModal .modal-content {
+            width: 90%;
+            max-width: 1200px;
+        }
+        
         .modal-header {
             font-size: 18px;
             font-weight: 600;
@@ -205,8 +210,15 @@
             background: #f8f9fa;
             border-radius: 4px;
             display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .stats-center {
+            display: flex;
             gap: 30px;
             justify-content: center;
+            flex: 1;
         }
         
         .stat-item {
@@ -295,6 +307,7 @@
             <button onclick="exportScanned()">Export Scanned</button>
             <button onclick="showImportDialog()">Import Scanned</button>
             <button onclick="exportAuditTrail()">Export Audit Trail</button>
+            <button onclick="showProgressOverlay()">All Letter Progress</button>
 <!--             <button onclick="clearData()">Clear All</button> -->
         </div>
         
@@ -303,21 +316,30 @@
         </div>
         
         <div class="stats" id="stats" style="display: none;">
-            <div class="stat-item">
-                <div class="stat-value" id="totalCount">0</div>
-                <div class="stat-label">Total Scripts</div>
+            <div class="stats-center">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalCount">0</div>
+                    <div class="stat-label">Total Scripts</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="scannedCount">0</div>
+                    <div class="stat-label">Scanned</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="unscannedCount">0</div>
+                    <div class="stat-label">Unscanned</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="controlCount">0</div>
+                    <div class="stat-label">Controls</div>
+                </div>
             </div>
             <div class="stat-item">
-                <div class="stat-value" id="scannedCount">0</div>
-                <div class="stat-label">Scanned</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value" id="unscannedCount">0</div>
-                <div class="stat-label">Unscanned</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value" id="controlCount">0</div>
-                <div class="stat-label">Controls</div>
+                <div class="stat-value" id="letterProgress">0/0</div>
+                <div class="stat-label" id="letterLabel">Letter Progress</div>
+                <div class="progress-bar" id="letterProgressBar" style="width: 100%; height: 4px; background: #ddd; margin-top: 5px; border-radius: 2px;">
+                    <div class="progress-fill" id="letterProgressFill" style="height: 100%; background: #007bff; width: 0%; border-radius: 2px;"></div>NOT INCLUDING CONTROLS
+                </div>
             </div>
         </div>
         
@@ -433,6 +455,25 @@
 
         </div>
 
+    </div>
+    
+    <div id="fridgeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Unscanned Fridge Items</div>
+            <div id="fridgeResults" style="margin: 10px 0; max-height: 400px; overflow-y: auto;"></div>
+            <div class="modal-buttons">
+                <button onclick="closeModal('fridgeModal')">CLOSE</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="progressModal" class="modal">
+        <div class="modal-content" style="width: 90%; max-width: 800px; height: 80%; margin: 10% auto; display: flex; flex-direction: column;">
+            <div class="modal-header">
+                <h2>All Letters Progress</h2>
+            </div>
+            <div id="progressResults" style="flex: 1; overflow-y: auto; padding: 10px;"></div>
+        </div>
     </div>
     
     <!-- Audio files (you'll need to add these) -->
@@ -722,6 +763,7 @@
             prescription.scanned = !prescription.scanned;
             addToActionLog(prescription, prescription.scanned ? 'Scanned' : 'Unscanned');
             addToAuditTrail(prescription, prescription.scanned ? 'Scanned' : 'Unscanned', 'Manual');
+            lastLetter = prescription.patientName[0];
             sortAndDisplay();
             updateStats();
             saveProgress();
@@ -831,6 +873,25 @@
             document.getElementById('scannedCount').textContent = scanned;
             document.getElementById('unscannedCount').textContent = unscanned;
             document.getElementById('controlCount').textContent = controls;
+            
+            // Update letter progress
+            if (lastLetter) {
+                const letterPrescriptions = prescriptions.filter(p => 
+                    !p.isControl && p.patientName.toUpperCase().startsWith(lastLetter.toUpperCase())
+                );
+                const letterScanned = letterPrescriptions.filter(p => p.scanned).length;
+                const letterTotal = letterPrescriptions.length;
+                
+                document.getElementById('letterProgress').textContent = `${letterScanned}/${letterTotal}`;
+                document.getElementById('letterLabel').textContent = `${lastLetter.toUpperCase()} Progress`;
+                
+                const progressPercent = letterTotal > 0 ? (letterScanned / letterTotal) * 100 : 0;
+                document.getElementById('letterProgressFill').style.width = `${progressPercent}%`;
+            } else {
+                document.getElementById('letterProgress').textContent = '0/0';
+                document.getElementById('letterLabel').textContent = 'Letter Progress';
+                document.getElementById('letterProgressFill').style.width = '0%';
+            }
         }
         
         // Scan input handling
@@ -872,6 +933,18 @@
                     document.getElementById('partialRxInput').value = '';
                     document.getElementById('partialRxResults').innerHTML = '';
                     document.getElementById('partialRxInput').focus();
+                    return;
+                }
+                
+                if (value.toLowerCase() === 'findfridge') {
+                    this.value = '';
+                    showFridgeOverlay();
+                    return;
+                }
+                
+                if (value.toLowerCase() === 'progress') {
+                    this.value = '';
+                    showProgressOverlay();
                     return;
                 }
                 
@@ -965,6 +1038,7 @@
                 matches[0].scanned = true;
                 addToActionLog(matches[0], 'Entered Manually');
                 addToAuditTrail(matches[0], 'Scanned', 'Manual Entry');
+                lastLetter = matches[0].patientName[0];
                 sortAndDisplay();
                 updateStats();
                 saveProgress();
@@ -973,13 +1047,28 @@
                 document.getElementById('partialRxInput').value = '';
                 document.getElementById('partialRxResults').innerHTML = '';
                 document.getElementById('partialRxInput').focus();
-                // closeModal('partialRxModal');
+                closeModal('partialRxModal');
                 playSound('scanSound');
             } else {
-                resultsDiv.innerHTML = '<p>Multiple matches found:</p>';
+                resultsDiv.innerHTML = '<p>Multiple matches found - click to scan:</p>';
                 matches.forEach(m => {
-                    resultsDiv.innerHTML += `<p>${m.rxNumber} - ${m.patientName}</p>`;
+                    resultsDiv.innerHTML += `<p style="cursor: pointer; color: blue;" onclick="scanPartialMatch('${m.rxNumber}')">${m.rxNumber} - ${m.patientName}</p>`;
                 });
+            }
+        }
+        
+        function scanPartialMatch(rxNumber) {
+            const prescription = prescriptions.find(p => p.rxNumber === rxNumber);
+            if (prescription) {
+                prescription.scanned = true;
+                addToActionLog(prescription, 'Entered Manually');
+                addToAuditTrail(prescription, 'Scanned', 'Manual Entry');
+                lastLetter = prescription.patientName[0];
+                sortAndDisplay();
+                updateStats();
+                saveProgress();
+                closeModal('partialRxModal');
+                playSound('scanSound');
             }
         }
         
@@ -1052,7 +1141,7 @@
                 if (nameStart >= startLetters && 
                     nameStart <= endLetters && 
                     !p.isControl && 
-                    p.daysReady <= 6 && 
+                    p.daysReady <= 7 && 
                     !p.scanned) {
                     p.scanned = true;
                     addToActionLog(p, 'Scanned');
@@ -1397,6 +1486,74 @@
         }
         // Initialize - set focus to scan input
         document.getElementById('scanInput').focus();
+        
+        function showFridgeOverlay() {
+            const matchingPrescriptions = findUnscannedMatchingPrescriptions();
+            const resultsDiv = document.getElementById('fridgeResults');
+            resultsDiv.innerHTML = '';
+            
+            if (matchingPrescriptions.length === 0) {
+                resultsDiv.innerHTML = '<p>No unscanned items match the fridge criteria.</p>';
+            } else {
+                const table = document.createElement('table');
+                table.style.width = '100%';
+                table.style.borderCollapse = 'collapse';
+                
+                // Header
+                const header = table.createTHead();
+                const headerRow = header.insertRow();
+                ['Patient Name', 'RX Number', 'Drug'].forEach(text => {
+                    const th = document.createElement('th');
+                    th.textContent = text;
+                    th.style.border = '1px solid #ddd';
+                    th.style.padding = '8px';
+                    th.style.backgroundColor = '#f2f2f2';
+                    headerRow.appendChild(th);
+                });
+                
+                // Body
+                const tbody = table.createTBody();
+                matchingPrescriptions.forEach(p => {
+                    const row = tbody.insertRow();
+                    [p.patientName, p.rxNumber, p.drug].forEach(text => {
+                        const td = row.insertCell();
+                        td.textContent = text;
+                        td.style.border = '1px solid #ddd';
+                        td.style.padding = '8px';
+                    });
+                });
+                
+                resultsDiv.appendChild(table);
+            }
+            
+            document.getElementById('fridgeModal').style.display = 'block';
+        }
+        
+        function showProgressOverlay() {
+            const resultsDiv = document.getElementById('progressResults');
+            resultsDiv.innerHTML = '';
+            
+            // Get all unique letters
+            const letters = [...new Set(prescriptions.filter(p => !p.isControl).map(p => p.patientName[0].toUpperCase()))].sort();
+            
+            letters.forEach(letter => {
+                const letterPrescriptions = prescriptions.filter(p => !p.isControl && p.patientName[0].toUpperCase() === letter);
+                const letterScanned = letterPrescriptions.filter(p => p.scanned).length;
+                const letterTotal = letterPrescriptions.length;
+                const progressPercent = letterTotal > 0 ? (letterScanned / letterTotal) * 100 : 0;
+                
+                resultsDiv.innerHTML += `
+                    <div style="margin-bottom: 10px;">
+                        <div>${letter}: ${letterScanned}/${letterTotal}</div>
+                        <div style="width: 100%; height: 10px; background: #ddd; border-radius: 5px;">
+                            <div style="height: 100%; background: #007bff; width: ${progressPercent}%; border-radius: 5px;"></div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            document.getElementById('progressModal').style.display = 'block';
+        }
         
         // Add Papa Parse library
         const script = document.createElement('script');
