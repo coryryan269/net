@@ -178,6 +178,11 @@
             border-radius: 8px;
         }
         
+        #fridgeModal .modal-content {
+            width: 90%;
+            max-width: 1200px;
+        }
+        
         .modal-header {
             font-size: 18px;
             font-weight: 600;
@@ -318,6 +323,13 @@
             <div class="stat-item">
                 <div class="stat-value" id="controlCount">0</div>
                 <div class="stat-label">Controls</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="letterProgress">0/0</div>
+                <div class="stat-label" id="letterLabel">Letter Progress</div>
+                <div class="progress-bar" id="letterProgressBar" style="width: 100%; height: 4px; background: #ddd; margin-top: 5px; border-radius: 2px;">
+                    <div class="progress-fill" id="letterProgressFill" style="height: 100%; background: #007bff; width: 0%; border-radius: 2px;"></div>
+                </div>
             </div>
         </div>
         
@@ -841,6 +853,25 @@
             document.getElementById('scannedCount').textContent = scanned;
             document.getElementById('unscannedCount').textContent = unscanned;
             document.getElementById('controlCount').textContent = controls;
+            
+            // Update letter progress
+            if (lastLetter) {
+                const letterPrescriptions = prescriptions.filter(p => 
+                    !p.isControl && p.patientName.toUpperCase().startsWith(lastLetter.toUpperCase())
+                );
+                const letterScanned = letterPrescriptions.filter(p => p.scanned).length;
+                const letterTotal = letterPrescriptions.length;
+                
+                document.getElementById('letterProgress').textContent = `${letterScanned}/${letterTotal}`;
+                document.getElementById('letterLabel').textContent = `${lastLetter.toUpperCase()} Progress`;
+                
+                const progressPercent = letterTotal > 0 ? (letterScanned / letterTotal) * 100 : 0;
+                document.getElementById('letterProgressFill').style.width = `${progressPercent}%`;
+            } else {
+                document.getElementById('letterProgress').textContent = '0/0';
+                document.getElementById('letterLabel').textContent = 'Letter Progress';
+                document.getElementById('letterProgressFill').style.width = '0%';
+            }
         }
         
         // Scan input handling
@@ -1068,7 +1099,7 @@
                 if (nameStart >= startLetters && 
                     nameStart <= endLetters && 
                     !p.isControl && 
-                    p.daysReady <= 6 && 
+                    p.daysReady <= 7 && 
                     !p.scanned) {
                     p.scanned = true;
                     addToActionLog(p, 'Scanned');
