@@ -210,8 +210,15 @@
             background: #f8f9fa;
             border-radius: 4px;
             display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .stats-center {
+            display: flex;
             gap: 30px;
             justify-content: center;
+            flex: 1;
         }
         
         .stat-item {
@@ -308,23 +315,25 @@
         </div>
         
         <div class="stats" id="stats" style="display: none;">
-            <div class="stat-item">
-                <div class="stat-value" id="totalCount">0</div>
-                <div class="stat-label">Total Scripts</div>
+            <div class="stats-center">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalCount">0</div>
+                    <div class="stat-label">Total Scripts</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="scannedCount">0</div>
+                    <div class="stat-label">Scanned</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="unscannedCount">0</div>
+                    <div class="stat-label">Unscanned</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="controlCount">0</div>
+                    <div class="stat-label">Controls</div>
+                </div>
             </div>
             <div class="stat-item">
-                <div class="stat-value" id="scannedCount">0</div>
-                <div class="stat-label">Scanned</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value" id="unscannedCount">0</div>
-                <div class="stat-label">Unscanned</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value" id="controlCount">0</div>
-                <div class="stat-label">Controls</div>
-            </div>
-            <div class="stat-item" style="margin-left: auto;">
                 <div class="stat-value" id="letterProgress">0/0</div>
                 <div class="stat-label" id="letterLabel">Letter Progress</div>
                 <div class="progress-bar" id="letterProgressBar" style="width: 100%; height: 4px; background: #ddd; margin-top: 5px; border-radius: 2px;">
@@ -1022,13 +1031,28 @@
                 document.getElementById('partialRxInput').value = '';
                 document.getElementById('partialRxResults').innerHTML = '';
                 document.getElementById('partialRxInput').focus();
-                // closeModal('partialRxModal');
+                closeModal('partialRxModal');
                 playSound('scanSound');
             } else {
-                resultsDiv.innerHTML = '<p>Multiple matches found:</p>';
+                resultsDiv.innerHTML = '<p>Multiple matches found - click to scan:</p>';
                 matches.forEach(m => {
-                    resultsDiv.innerHTML += `<p>${m.rxNumber} - ${m.patientName}</p>`;
+                    resultsDiv.innerHTML += `<p style="cursor: pointer; color: blue;" onclick="scanPartialMatch('${m.rxNumber}')">${m.rxNumber} - ${m.patientName}</p>`;
                 });
+            }
+        }
+        
+        function scanPartialMatch(rxNumber) {
+            const prescription = prescriptions.find(p => p.rxNumber === rxNumber);
+            if (prescription) {
+                prescription.scanned = true;
+                addToActionLog(prescription, 'Entered Manually');
+                addToAuditTrail(prescription, 'Scanned', 'Manual Entry');
+                lastLetter = prescription.patientName[0];
+                sortAndDisplay();
+                updateStats();
+                saveProgress();
+                closeModal('partialRxModal');
+                playSound('scanSound');
             }
         }
         
