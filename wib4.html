@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WIB REPORT ++</title>
+    <title>WIB REPORT</title>
     <link rel="icon" type="image/x-icon" href="pharmIcon.png">
     <style>
         * {
@@ -1014,7 +1014,7 @@
             document.getElementById("scanInput").value = "";
         }
         let currentSound = null;
-        function playSound("data:audio/mpeg;base64," + soundUrl) {
+        function playSound(soundUrl) {
   // Stop the previous sound if it's still playing
   if (currentSound) {
     currentSound.pause();
@@ -1022,7 +1022,7 @@
   }
 
   // Start the new sound
-  currentSound = new Audio(soundUrl);
+  currentSound = new Audio("data:audio/mpeg;base64," + soundUrl);
   currentSound.play().catch(err => {
     console.error("Sound failed to play:", err);
   });
