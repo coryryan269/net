@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WIB REPORT</title>
+    <title>WIB REPORT++</title>
     <link rel="icon" type="image/x-icon" href="pharmIcon.png">
     <style>
         * {
@@ -1015,11 +1015,12 @@
         }
         let currentSound = null;
         function playSound(soundUrl) {
-  // Stop the previous sound if it's still playing
-  if (currentSound) {
-    currentSound.pause();
-    currentSound.currentTime = 0;
-  }
+                    soundUrl = document.getElementById(soundUrl)
+          // Stop the previous sound if it's still playing
+          if (currentSound) {
+            currentSound.pause();
+            currentSound.currentTime = 0;
+          }
 
   // Start the new sound
   currentSound = new Audio(soundUrl);
