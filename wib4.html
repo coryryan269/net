@@ -1216,33 +1216,61 @@
         
         function loadProgress() {
             if (!reportId) return;
-            
+        
+            // Keep only the 4 most recent audit records
+            const audits = [];
+        
+            Object.keys(localStorage).forEach(key => {
+                if (
+                    key.startsWith('pharmacy_audit_') &&
+                    !key.startsWith('pharmacy_audit_trail_')
+                ) {
+                    try {
+                        const data = JSON.parse(localStorage.getItem(key));
+        
+                        if (data.timestamp) {
+                            audits.push({
+                                key,
+                                timestamp: new Date(data.timestamp).getTime()
+                            });
+                        }
+                    } catch (e) {
+                        // Ignore invalid entries
+                    }
+                }
+            });
+        
+            audits
+                .sort((a, b) => b.timestamp - a.timestamp) // newest first
+                .slice(4) // everything after the first 4
+                .forEach(item => localStorage.removeItem(item.key));
+        
             const saved = localStorage.getItem(`pharmacy_audit_${reportId}`);
+        
             if (saved) {
                 const data = JSON.parse(saved);
+        
                 let indexes;
-                if (data.scannedIndexes == "")
+                if (data.scannedIndexes === "")
                     indexes = [];
                 else
                     indexes = data.scannedIndexes.split(',').map(Number);
-                
+        
                 indexes.forEach(index => {
                     const prescription = prescriptions.find(p => p.id === index);
                     if (prescription) {
                         prescription.scanned = true;
                     }
                 });
-                
+        
                 alert('Previous progress loaded');
             }
+        
             // Load audit trail
-
             const savedTrail = localStorage.getItem(`pharmacy_audit_trail_${reportId}`);
-
+        
             if (savedTrail) {
-
                 auditTrail = JSON.parse(savedTrail);
-
             }
         }
         
