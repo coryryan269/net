@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WIB REPORT++</title>
+    <title>WIB REPORT+++</title>
     <link rel="icon" type="image/x-icon" href="pharmIcon.png">
     <style>
         * {
@@ -759,7 +759,25 @@
         function toggleScanned(id) {
             const prescription = prescriptions.find(p => p.id === id);
             if (!prescription) return;
-            
+             // SOUNDS SECTION start
+                if (isControlRx(id)){
+                  playSound("controlSound");
+                }
+                else if (prescription.patientName[0] != lastLetter && lastLetter != ""){
+                  playSound("letterChangeSound")
+                }
+                else
+                  playSound('scanSound');
+                // SOUNDS SECTION END
+                lastLetter = prescription.patientName[0];
+                sortAndDisplay();
+                updateStats();
+                saveProgress();
+            } else {
+                if (id != "")
+                    playSound('notFoundSound');
+                // alert(`RX Number ${rxNumber} not found in report`);
+            }
             prescription.scanned = !prescription.scanned;
             addToActionLog(prescription, prescription.scanned ? 'Scanned' : 'Unscanned');
             addToAuditTrail(prescription, prescription.scanned ? 'Scanned' : 'Unscanned', 'Manual');
