@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WIB REPORT++++</title>
+    <title>WIB REPORT+++</title>
     <link rel="icon" type="image/x-icon" href="pharmIcon.png">
     <style>
         * {
@@ -757,9 +757,10 @@
         }
         
         function toggleScanned(id) {
-            console.log(id);
-            console.log(typeof(id));
+            
             const prescription = prescriptions.find(p => p.id === id);
+            console.log(prescription);
+            console.log(typeof(prescription));
             if (!prescription) return;
             
             // SOUNDS SECTION start
