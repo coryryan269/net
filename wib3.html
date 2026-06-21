@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WIB REPORT ++</title>
+    <title>WIB REPORT++</title>
     <link rel="icon" type="image/x-icon" href="pharmIcon.png">
     <style>
         * {
@@ -1013,13 +1013,21 @@
             }
             document.getElementById("scanInput").value = "";
         }
-        
-        function playSound(soundId) {
-            const audio = document.getElementById(soundId);
-            if (audio) {
-                audio.play().catch(e => console.log('Audio play failed:', e));
-            }
-        }
+        let currentSound = null;
+        function playSound(soundUrl) {
+                    soundUrl = document.getElementById(soundUrl)
+          // Stop the previous sound if it's still playing
+          if (currentSound) {
+            currentSound.pause();
+            currentSound.currentTime = 0;
+          }
+
+  // Start the new sound
+  currentSound = new Audio(soundUrl);
+  currentSound.play().catch(err => {
+    console.error("Sound failed to play:", err);
+  });
+}
         
         function searchPartialRx() {
             const partial = document.getElementById('partialRxInput').value.trim();
