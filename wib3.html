@@ -1273,7 +1273,7 @@
         
             audits
                 .sort((a, b) => b.timestamp - a.timestamp) // newest first
-                .slice(4) // everything after the first 4
+                .slice(2) // everything after the first 4
                 .forEach(item => localStorage.removeItem(item.key));
         
             auditTrails
