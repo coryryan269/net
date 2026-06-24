@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WIB REPORT++++</title>
+    <title>WIB REPORT+</title>
     <link rel="icon" type="image/x-icon" href="pharmIcon.png">
     <style>
         * {
@@ -1234,6 +1234,7 @@
         
             // Keep only the 4 most recent audit records
             const audits = [];
+            const auditTrails = [];
         
             Object.keys(localStorage).forEach(key => {
                 if (
@@ -1253,11 +1254,31 @@
                         // Ignore invalid entries
                     }
                 }
+        
+                if (key.startsWith('pharmacy_audit_trail_')) {
+                    try {
+                        const data = JSON.parse(localStorage.getItem(key));
+        
+                        if (Array.isArray(data) && data.length > 0 && data[0].timestamp) {
+                            auditTrails.push({
+                                key,
+                                timestamp: new Date(data[0].timestamp).getTime()
+                            });
+                        }
+                    } catch (e) {
+                        // Ignore invalid entries
+                    }
+                }
             });
         
             audits
                 .sort((a, b) => b.timestamp - a.timestamp) // newest first
                 .slice(4) // everything after the first 4
+                .forEach(item => localStorage.removeItem(item.key));
+        
+            auditTrails
+                .sort((a, b) => b.timestamp - a.timestamp) // newest first
+                .slice(4)
                 .forEach(item => localStorage.removeItem(item.key));
         
             const saved = localStorage.getItem(`pharmacy_audit_${reportId}`);
