@@ -516,6 +516,8 @@
 
         window.onload = function() {
 
+            clearLegacyAuditTrails();
+
             const savedUser = sessionStorage.getItem('pharmacy_audit_user');
 
             // Normalize previously-saved values (strip any trailing '*' marker and trim).
@@ -796,11 +798,7 @@
 
                 userName: currentUser,
 
-                patientName: prescription.patientName,
-
-                rxNumber: prescription.rxNumber,
-
-                drug: prescription.drug,
+                prescriptionIndex: prescription.id,
 
                 action: action,
 
@@ -1184,8 +1182,40 @@
 
             if (!reportId) return;
 
-            localStorage.setItem(`pharmacy_audit_trail_${reportId}`, JSON.stringify(auditTrail));
+            const entries = auditTrail.map(entry => ({
+                timestamp: entry.timestamp,
+                userName: entry.userName,
+                prescriptionIndex: entry.prescriptionIndex,
+                action: entry.action,
+                scanType: entry.scanType,
+                reportId: entry.reportId
+            }));
 
+            localStorage.setItem(`pharmacy_audit_trail_${reportId}`, JSON.stringify({
+                version: 2,
+                entries
+            }));
+
+        }
+
+        function clearLegacyAuditTrails() {
+            Object.keys(localStorage).forEach(key => {
+                if (!key.startsWith('pharmacy_audit_trail_')) return;
+
+                try {
+                    const saved = JSON.parse(localStorage.getItem(key));
+                    const isCurrentFormat = saved && saved.version === 2 && Array.isArray(saved.entries);
+                    const containsSensitiveFields = isCurrentFormat && saved.entries.some(entry =>
+                        entry && ('patientName' in entry || 'rxNumber' in entry || 'drug' in entry)
+                    );
+
+                    if (!isCurrentFormat || containsSensitiveFields) {
+                        localStorage.removeItem(key);
+                    }
+                } catch (e) {
+                    localStorage.removeItem(key);
+                }
+            });
         }
         
         function closeModal(modalId) {
@@ -1259,14 +1289,16 @@
                     try {
                         const data = JSON.parse(localStorage.getItem(key));
         
-                        if (Array.isArray(data) && data.length > 0 && data[0].timestamp) {
+                        if (data.version === 2 && Array.isArray(data.entries) && data.entries.length > 0 && data.entries[0].timestamp) {
                             auditTrails.push({
                                 key,
-                                timestamp: new Date(data[0].timestamp).getTime()
+                                timestamp: new Date(data.entries[0].timestamp).getTime()
                             });
+                        } else {
+                            localStorage.removeItem(key);
                         }
                     } catch (e) {
-                        // Ignore invalid entries
+                        localStorage.removeItem(key);
                     }
                 }
             });
@@ -1306,7 +1338,10 @@
             const savedTrail = localStorage.getItem(`pharmacy_audit_trail_${reportId}`);
         
             if (savedTrail) {
-                auditTrail = JSON.parse(savedTrail);
+                const data = JSON.parse(savedTrail);
+                if (data.version === 2 && Array.isArray(data.entries)) {
+                    auditTrail = data.entries;
+                }
             }
         }
         
@@ -1390,6 +1425,32 @@
         function showImportDialog() {
             document.getElementById('importModal').style.display = 'block';
         }
+
+        function normalizeAuditTrailEntry(entry) {
+            if (!entry || typeof entry !== 'object') return null;
+
+            let prescriptionIndex = null;
+            if (entry.prescriptionIndex !== undefined && entry.prescriptionIndex !== null && entry.prescriptionIndex !== '') {
+                const parsedIndex = Number(entry.prescriptionIndex);
+                if (Number.isInteger(parsedIndex)) prescriptionIndex = parsedIndex;
+            }
+
+            if (entry.rxNumber !== undefined && entry.rxNumber !== null) {
+                const prescription = prescriptions.find(p => String(p.rxNumber) === String(entry.rxNumber));
+                if (prescription) prescriptionIndex = prescription.id;
+            }
+
+            if (prescriptionIndex === null) return null;
+
+            return {
+                timestamp: entry.timestamp || new Date().toISOString(),
+                userName: entry.userName || '',
+                prescriptionIndex,
+                action: entry.action || '',
+                scanType: entry.scanType || '',
+                reportId: entry.reportId ?? reportId
+            };
+        }
         
         function importScannedData() {
             const importText = document.getElementById('importData').value.trim();
@@ -1425,20 +1486,22 @@
                 if (data.auditTrail && Array.isArray(data.auditTrail)) {
 
                     data.auditTrail.forEach(entry => {
+                        const normalizedEntry = normalizeAuditTrailEntry(entry);
+                        if (!normalizedEntry) return;
 
                         // Only add if not already in our trail (avoid duplicates)
 
                         const exists = auditTrail.some(existing => 
 
-                            existing.timestamp === entry.timestamp && 
+                            existing.timestamp === normalizedEntry.timestamp && 
 
-                            existing.rxNumber === entry.rxNumber
+                            existing.prescriptionIndex === normalizedEntry.prescriptionIndex
 
                         );
 
                         if (!exists) {
 
-                            auditTrail.push(entry);
+                            auditTrail.push(normalizedEntry);
 
                         }
 
@@ -1484,17 +1547,19 @@
 
             auditTrail.forEach(entry => {
 
+                const prescription = prescriptions.find(p => p.id === entry.prescriptionIndex);
+
                 const row = [
 
                     new Date(entry.timestamp).toLocaleString().replace(',',''),
 
                     entry.userName,
 
-                    `"${entry.patientName}"`, // Quoted to handle commas in names
+                    `"${prescription ? prescription.patientName : ''}"`, // Quoted to handle commas in names
 
-                    entry.rxNumber,
+                    prescription ? prescription.rxNumber : '',
 
-                    `"${entry.drug}"`, // Quoted to handle commas in drug names
+                    `"${prescription ? prescription.drug : ''}"`, // Quoted to handle commas in drug names
 
                     entry.action,
 
